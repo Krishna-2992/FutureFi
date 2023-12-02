@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 
-
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -39,6 +38,7 @@ contract FuturesExchange {
         address seller; 
         address buyer;
     }
+
     mapping (uint256 => SettledContracts) indexToSettledContracts;
     uint256 private settledContractPairCount;
 
@@ -50,12 +50,19 @@ contract FuturesExchange {
     address[] public sellers;
     address[] public buyers;
 
+    mapping (address => bool) isSeller;
+    mapping (address => bool) isBuyer;
+
     mapping (uint256 => address[]) sellerSlotAddresses;
     mapping (uint256 => address[]) buyerSlotAddresses;
 
     // for tracking the index of seller/buyers in the slotAddresses. like it's the turn of 3rd buyer to get executed 
     mapping (uint256 => uint256) slotSellerIndex;
     mapping (uint256 => uint256) slotBuyerIndex;
+
+    // Balance present in the traders account
+    mapping (address => uint256) wethBalance; 
+    mapping (address => uint256) usdcBalance;
 
     uint256 public totalSellingAmount;
     uint256 public totalBuyingAmount;
@@ -95,6 +102,9 @@ contract FuturesExchange {
             assetDeposited: 10 ** 18
         });
 
+        // update the isSeller mapping
+        isSeller[msg.sender] = true;
+
         // update the storage variables and arrays regarding this trader
         traders.push(msg.sender);
         sellers.push(msg.sender);
@@ -105,15 +115,14 @@ contract FuturesExchange {
         if(buyerSlotAddresses[_price].length > slotBuyerIndex[_price]) {
             // make the settlemnt between this seller and the buyer at index slotBuyerIndex
             address buyer = buyerSlotAddresses[_price][slotBuyerIndex[_price]];
-            // drop the settled contract in the mapping indexToSettledContracts and increase the count
-            indexToSettledContracts[settledContractPairCount] = SettledContracts(msg.sender, buyer);
+
+            settlePair(buyer, msg.sender);
+
             // increase the slotBuyerIndex by 1
-            settledContractPairCount++;
             slotBuyerIndex[_price]++;
         } else {
             // push this seller and its contract in the sellerSlotAddresses[_price] mapping
             sellerSlotAddresses[_price].push(msg.sender);
-            
         }
 
         // if the sellers surpass the amount of total buyers present by 200%, hault the process of selling for 1 hour and make the chainlink automation which will check for the status every hour and if the number of sellers becomes less than 150% of total buyers, then resume the exchange for selling as well
@@ -145,8 +154,10 @@ contract FuturesExchange {
             createdAt: block.timestamp,
             matureAt: maturityTime,
             valueAtCreation: getPrice(),
-            assetDeposited: 10 ** 18
+            assetDeposited: usdcTokenReceive
         });
+
+        isBuyer[msg.sender] = true;
         // update the array regarding this trader
         traders.push(msg.sender);
         buyers.push(msg.sender);
@@ -158,7 +169,6 @@ contract FuturesExchange {
             address seller = sellerSlotAddresses[_price][slotSellerIndex[_price]];
 
             settlePair(seller, msg.sender);
-
 
             slotSellerIndex[_price]++;
 
@@ -174,6 +184,53 @@ contract FuturesExchange {
         settledContractPairCount++;
     }
 
+    function ExecuteFuture() public {
+        // check if the sender is a trader
+        uint256 traderCount = traders.length;
+        bool isTrader = false;
+        for(uint i=0; i<traderCount; i++) {
+            if(traders[i] == msg.sender) {
+                isTrader = true;
+                break;
+            }
+        }
+
+        require(isTrader, "Only Traders can Execute future contracts");
+
+        // check if the date for the future execution has passed. 
+        uint256 currentTimestamp = block.timestamp;
+        uint256 contractMaturityTime = contracts[msg.sender].matureAt;
+
+        require(contractMaturityTime < currentTimestamp, "Contract has not yet matured");
+
+        // check that contract has been settled and sender has not yet claimed his future
+        if(contracts[msg.sender].status == Status.Created) {
+            revert("The contract ha not yet settled");
+        } else if(contracts[msg.sender].status == Status.Executed) {
+            revert("This contract has already been executed");
+        }
+
+        // if seller, give the required amount to him
+        if(isSeller[msg.sender]) {
+            uint amountPayable = contracts[msg.sender].price;
+            require(amountPayable <= address(this).balance, "Insufficient balance in the exchange");
+            usdcBalance[msg.sender] += amountPayable;
+        }
+
+        // if buyer, make him pay the remaining amount and give him the WETH.
+        if(isBuyer[msg.sender]) {
+            uint usdcTokenReceive = contracts[msg.sender].price - contracts[msg.sender].assetDeposited;
+            USDCtoken.transferFrom(msg.sender, address(this), usdcTokenReceive);
+            wethBalance[msg.sender] += 10**18;
+        }
+
+        // make the updations in the storage variables.
+        contracts[msg.sender].status = Status.Executed;
+
+        // delete all the entries regarding the trader
+
+    }
+
     // // // function to set the deal(bond) for the buyer and the seller
 
     // function to settle the deal b/w a buyer and a seller
@@ -181,6 +238,18 @@ contract FuturesExchange {
     // function to take out the WETH by settling the price
 
     // function to increase the security money(in case required)
+
+    // function to claim the funds
+    function claimUSDC(uint256 _amount) external {
+        require(usdcBalance[msg.sender] >= _amount, "Insufficient balance!");
+        usdcBalance[msg.sender] -= _amount;
+        USDCtoken.transfer(msg.sender, _amount);
+    }
+    function claimWETH(uint256 _amount) external {
+        require(wethBalance[msg.sender] >= _amount, "Insufficient balance!");
+        wethBalance[msg.sender] -= _amount;
+        WETHtoken.transfer(msg.sender, _amount);
+    }
 
     // function to get the current WETH price
     function getPrice() public view returns(uint256) {
@@ -196,7 +265,6 @@ contract FuturesExchange {
     function getLastSettlementDate() public view returns(uint256) {
         return lastSettlementDate;
     }
-
 
     // GETTERS
 

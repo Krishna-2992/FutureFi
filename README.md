@@ -95,7 +95,8 @@ Further Updations:
     4) Make it applicable for upto 3 slots, i.e. _duration to be 0, 1, 2
     5) Make it possible for traders to withdraw their trade by paying a proper amount of compensation.
     6) Make it possible for the traders to call the individual execute rather than us calling it for every contract.
-
+    7) Implement that seller could sell the weth without even having to collateralize in weth(they can collateralize in usdc)
+    8) Implement the feature of haulting the system when required
 
 
 
