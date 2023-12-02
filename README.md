@@ -99,4 +99,8 @@ Further Updations:
     8) Implement the feature of haulting the system when required
 
 
+Features/Limitations: 
+
+    1) Only one contract per price by one user
+
 

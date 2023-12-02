@@ -5,6 +5,12 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 pragma solidity ^0.8.20;
 
+////////////////////////////////////////////////
+// This is the first contract which aims at building a structure for execution of the future exchange
+// Note: It's neither of optimise, complete or secure.
+// No events present in this
+////////////////////////////////////////////////
+
 contract FuturesExchange {
 
     AggregatorV3Interface internal priceFeed;
@@ -186,15 +192,6 @@ contract FuturesExchange {
 
     function ExecuteFuture() public {
         // check if the sender is a trader
-        uint256 traderCount = traders.length;
-        bool isTrader = false;
-        for(uint i=0; i<traderCount; i++) {
-            if(traders[i] == msg.sender) {
-                isTrader = true;
-                break;
-            }
-        }
-
         require(isTrader, "Only Traders can Execute future contracts");
 
         // check if the date for the future execution has passed. 
