@@ -103,4 +103,38 @@ Features/Limitations:
 
     1) Only one contract per price by one user
 
+--------------------------------------------------------------------------------
+---------------------------------  VERSION 3  ----------------------------------
+--------------------------------------------------------------------------------
+
+Here we are supposed to make an exchange which have the capability to get the USDC deposit by the user (5% of the current price) and then update the future price for a fixed date on the basis of an algorithm. Then at the end of the settlement period, every contract will be settled and then executed at the last point. 
+After which, all the entries will again be erased and whole set of new processes start.
+
+Steps: 
+
+    1) Read the current price of the commodity from the chainlink data feed. 
+    1.5)Make every trader to open his account and keep some fixed amount of money in it
+    2) Use the below specified algorithm for getting the future's price.
+    3) Make the traders buy/sell the future on the rates specified
+    4) Get all the details of all the contracts stored properly in storage variables
+    5) Emit proper events for each process so as to have a historic record
+    6) After 9 days, stop the trading process and now the settlement would take place
+    7) In settlement, everyone's record will be brought down to zero i.e. the one who currently owns an asset would automatically sell the same at current rate and vice versa.
+    8) At start of settlement time, the exact price from the chainlink would be read and everyone would be paid according to it.
+
+    We'll have to create two chainlink automations: 
+        i) after 9 days: that will hault the trading process and will start the process of settlement. 
+        ii) after 10 days: that will resume the trading process by erasing all the previous data in state variable and calling the updateLatestSettlementTime and setFuturesInitialPrice.
+
+
+
+Innovative Algo(By legend Krishna😎):
+
+    - Get the price of the asset from chainlink
+    - for the first buyer or seller, increase or decrease it by 0.1%
+    - for the upcoming ones, change it like: (original price) * buyers / sellers; ___discuss this
+    - change this original price value each hour and get it from the chainlink oracle
+    - hence use the chainlink automation as well for changing the price each hour
+
+
 
