@@ -50,24 +50,23 @@ contract FutureExchange3 {
         uint256 settlementTime;
     }
 
-    mapping (address => bytes32[]) addressToContractIds;
-    mapping (bytes32 => Contract) contractIdToContract;
+    mapping (address => bytes32[]) public addressToContractIds;
+    mapping (bytes32 => Contract) public contractIdToContract;
 
-    address[] traders;
-    mapping(address => uint256) traderUSDCBalance;
-    mapping(address => bool) isTrader;
-    mapping(address => uint256) tradersSecurityAmount;
+    address[] public traders;
+    mapping(address => uint256) public traderUSDCBalance;
+    mapping(address => bool) public isTrader;
+    mapping(address => uint256) public tradersSecurityAmount;
     // in case of buy, we will subtract (current future rate * number of assets)
-    mapping(address => int256) futureCumulativeSum; // handle int256 carefully
-    mapping(address => int256) netAssetsOwned; // handle int256 carefully
+    mapping(address => int256) public futureCumulativeSum; // handle int256 carefully
+    mapping(address => int256) public netAssetsOwned; // handle int256 carefully
 
     // execution time => specific slot assets sold
-    mapping (uint256 => uint256) totalAssetsSold;
-    mapping (uint256 => uint256) totalAssetsBought;
+    mapping (uint256 => uint256) public totalAssetsSold;
+    mapping (uint256 => uint256) public totalAssetsBought;
 
     // execution time => futures value
-    mapping (uint256 => uint256) futureValueAt;
-
+    mapping (uint256 => uint256) public futureValueAt;
 
     constructor(address _priceFeed, address _USDCtoken) {
         priceFeed = AggregatorV3Interface(_priceFeed);
@@ -94,16 +93,15 @@ contract FutureExchange3 {
     function buyAsset(uint256 _amount, uint8 _durationSlot) public {
         require(isTrader[msg.sender], "Trader account not created");
         // _amount will be in terms of 0.1 weth
-        uint256 currentFuturePrice = futureValueAt[_durationSlot];
-        uint256 pricePaid = currentFuturePrice * prePaymentPercentage * _amount;
-
-        require(USDCtoken.transferFrom(msg.sender, address(this), pricePaid * 10**10), "Insufficient USDC balance");
-
-        tradersSecurityAmount[msg.sender] += pricePaid * 10*10;
-        futureCumulativeSum[msg.sender] -= int256(currentFuturePrice * _amount * 10**10);
-        netAssetsOwned[msg.sender] += 1;
-
         uint256 maturityTime = getExecutionTimeBySlot(_durationSlot);
+        uint256 currentFuturePrice = futureValueAt[maturityTime];
+        uint256 pricePaid = currentFuturePrice * prePaymentPercentage * _amount / 100;
+
+        require(USDCtoken.transferFrom(msg.sender, address(this), pricePaid), "Insufficient USDC balance");
+
+        tradersSecurityAmount[msg.sender] += pricePaid;
+        futureCumulativeSum[msg.sender] -= int256(currentFuturePrice * _amount);
+        netAssetsOwned[msg.sender] += int256(_amount);
 
         bytes32 contractId = keccak256(abi.encodePacked(msg.sender, _durationSlot, block.timestamp));
 
@@ -132,17 +130,17 @@ contract FutureExchange3 {
 
         require(_amount > 0, "Selling amount must be greater than zero");
 
-        uint256 currentFuturePrice = futureValueAt[_durationSlot];
-        uint256 pricePaid = currentFuturePrice * _amount;
+        uint256 maturityTime = getExecutionTimeBySlot(_durationSlot);
+        uint256 currentFuturePrice = futureValueAt[maturityTime];
+        uint256 pricePaid = currentFuturePrice * prePaymentPercentage * _amount / 100;
 
         // Transfer WETH to the seller
-        require(USDCtoken.transferFrom(msg.sender, address(this), pricePaid * 10**10), "Insufficient USDC balance");
+        require(USDCtoken.transferFrom(msg.sender, address(this), pricePaid ), "Insufficient USDC balance");
 
-        tradersSecurityAmount[msg.sender] += pricePaid * 10*10;
-        futureCumulativeSum[msg.sender] += int256(currentFuturePrice * _amount * 10**10);
-        netAssetsOwned[msg.sender] -= 1;
+        tradersSecurityAmount[msg.sender] += pricePaid;
+        futureCumulativeSum[msg.sender] += int256(currentFuturePrice * _amount);
+        netAssetsOwned[msg.sender] -= int256(_amount);
 
-        uint256 maturityTime = getExecutionTimeBySlot(_durationSlot);
 
         bytes32 contractId = keccak256(abi.encodePacked(msg.sender, _durationSlot, block.timestamp));
 
@@ -183,7 +181,7 @@ contract FutureExchange3 {
             address trader = traders[i];
             if(netAssetsOwned[trader] < 0) { // sells more than buys
                 int256 assetsToPurchase = netAssetsOwned[trader];
-                int256 usdcToBePaid = assetsToPurchase * int256(futureValueAt[maturityTime] * 10**10);
+                int256 usdcToBePaid = assetsToPurchase * int256(futureValueAt[maturityTime]);
                 int256 netFutureCumulative = futureCumulativeSum[trader] - usdcToBePaid;
                 if(netFutureCumulative < 0) { // loss
                     uint256 positiveNetFutureCumulative = uint256(netFutureCumulative * (-1));
@@ -201,7 +199,7 @@ contract FutureExchange3 {
                 // emit the event that this trader has been settled!!
             } else { // buys more than sell
                 int256 assetsToSell = netAssetsOwned[trader];
-                int256 usdcToReceive = assetsToSell * int256(futureValueAt[maturityTime] * 10**10);
+                int256 usdcToReceive = assetsToSell * int256(futureValueAt[maturityTime]);
                 int256 netFutureCumulative = futureCumulativeSum[trader] + usdcToReceive;
                 if(netFutureCumulative < 0) { // loss
                     uint256 positiveNetFutureCumulative = uint256(netFutureCumulative * (-1));
@@ -228,17 +226,22 @@ contract FutureExchange3 {
     function setFuturesInitialPrice(uint8 _durationSlot) internal {
         uint256 maturityTime = getExecutionTimeBySlot(_durationSlot);
         uint256 currentPrice = getPrice();
-        futureValueAt[maturityTime] = currentPrice;
+        futureValueAt[maturityTime] = currentPrice * 10**10;
     } 
 
     // execute this function each time any new selling or buying takes place
     function updateFuturesPrice(uint8 _durationSlot) internal {
         uint256 maturityTime = getExecutionTimeBySlot(_durationSlot);
         // if more assets are bought => moore demand => price must rise
-        uint256 netDemand = totalAssetsBought[maturityTime] - totalAssetsBought[maturityTime];
+        int256 netDemand = int256(totalAssetsBought[maturityTime]) - int256(totalAssetsSold[maturityTime]);
         // New futures price = Current futures price + (Net demand * Adjustment factor)
         // adjustment factor for weth be 0.1
-        futureValueAt[maturityTime] = futureValueAt[maturityTime] + netDemand/10;
+        // 1500*10**18 - 0.1*10**18 * netDemand 
+        if(netDemand < 0) {
+            futureValueAt[maturityTime] = futureValueAt[maturityTime] - uint256(netDemand * (-1)) * 10**17;
+        } else {
+            futureValueAt[maturityTime] = futureValueAt[maturityTime] + uint256(netDemand) * 10**17;
+        }
     }
 
     function updateLastSettlementDate() public {
@@ -258,8 +261,14 @@ contract FutureExchange3 {
     }
 
     function getExecutionTimeBySlot(uint8 _durationSlot) public view returns(uint256) {
-        uint256 maturityTime = getLastSettlementDate() + (10 days) * _durationSlot;
+        uint256 maturityTime = getLastSettlementDate() + (10 days) * (_durationSlot + 1);
         return maturityTime;
     }
 
 }
+
+
+// 1701689245
+// 1702553880
+// 1701689880
+
