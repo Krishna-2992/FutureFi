@@ -135,6 +135,80 @@ Innovative Algo(By legend Krishna😎):
     - for the upcoming ones, change it like: (original price) * buyers / sellers; ___discuss this
     - change this original price value each hour and get it from the chainlink oracle
     - hence use the chainlink automation as well for changing the price each hour
+    - use the formula: 
+        futureValueAt[maturityTime] = currentPrice - netDemand * 0.1 * 10**18;
+
+EVENTS EMITTING: 
+    
+    - Creation of a new trader ✅ [trader, timestamp]
+    - Selling assets ✅ [trader, amount, futurePrice, timestamp, maturityTime]
+    - Buying assets ✅ [trader, amount, futurePrice, timestamp, maturityTime]
+    - Settle contracts invoked ✅ [timestamp]
+    - halted ✅ [timestamp, bool] 
+    - Trader's usdc updated(all contract settled) ✅ [trader, maturityTime, usdcReturned]
+    - New slot started ✅ [timestamp]
+    - FutureInitialPrice ✅ [timestamp, futurePrice]
+    - update last execution date ✅ [oldExecutionDate, newExecutionDate]
+    - claimUsdc ✅ [trader, _amount]
 
 
+TESTING PART: 
 
+    NOTE: FOR TESTING PURPOSE, PRICE FEED VALUE SET TO 1500*10**8, mocks not deployed separately!!
+    
+    i) Deployment: ✅
+    - should deploy properly with priceFeed address and usdcTokenAddress
+
+    ii) Creating Trader: 
+    - should create trader properly and update variables
+
+    iii) Buying Assets(SINGLE & MULTIPLE ASSETS): 
+    - check for trader existence
+    - check that current future price raises after purchase
+    - check if the security amount updated properly
+    - check if futureCumulativeSum updates properly
+    - check if netAssetsOwned updates properly
+    - check if totalAssetsBought updates properly
+
+    iv) Selling Assets(SINGLE & MULTIPLE ASSETS)
+    - check for trader existence
+    - check that current future price drops after selling
+    - check if the security amount updated properly
+    - check if futureCumulativeSum updates properly
+    - check if netAssetsOwned updates properly
+    - check if totalAssetsBought updates properly
+
+    v) Buying and Selling Assets(SINGLE TRADER) 
+    - check if security amount updates properly
+    - calculate the price and cross verify
+    - check if futureCumulativeSum updates properly
+    - check if netAssetsOwned updates properly
+    - check if totalAssetsBought updates properly
+
+    vi) Settling Futures Contracts(SINGLE TRADER) 
+    - after settlement, the traderUSDCBalance updates
+    - security amount becomes 0
+    - futureCumulativeSum becomes 0
+    - netAssetsOwned becomes 0
+    <!-- - totalAssetsBought becomes 0 -->
+    - system halts
+    - buying and selling stops
+
+    vii) Settling Futures Contracts(MULTIPLE TRADERS) 
+    - after settlement, the traderUSDCBalance updates
+    - security amount becomes 0
+    - futureCumulativeSum becomes 0
+    - netAssetsOwned becomes 0
+    - buying and selling halts
+
+    viii) CLAIM USDC
+    - only trader could claim
+    - amount should be less than in the traderUSDCBalance
+    - reduces traderUSDCBalance by amount
+
+    ix) Starting new slot
+    - system resumes(halting stops)
+    - currentPrice updates
+    <!-- - should erase the state data variable from: totalAssetsBought, totalAssetsSold -->
+    - should update lastSettlementDate
+    - should set future initial price from chainlink data feed  

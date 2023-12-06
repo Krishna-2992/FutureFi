@@ -274,7 +274,6 @@ describe('FuturesExchangev3', () => {
             expect(futuresPrice).to.be.greaterThan(updatedFuturesPrice)
         })
     })
-
     describe('ONE TRADER, MULTIPLE TRADES!!', () => {
         it('traders security amount updates properly', async () => {
             const {
@@ -352,6 +351,60 @@ describe('FuturesExchangev3', () => {
                 trader1.address
             )
             expect(netAssetsOwned).to.equal(-2)
+        })
+    })
+    describe('SETTLING FUTURES CONTRACTS - SINGLE TRADER', () => {
+        it('traders security amount updates properly', async () => {
+            const {
+                futuresExchange,
+                usdcToken,
+                trader1,
+                traderTx,
+                maturityTime,
+                futuresPrice,
+            } = await loadFixture(completeBasicSetup)
+
+            // sell an asset
+            const sellTx = await futuresExchange
+                .connect(trader1)
+                .sellAsset('4', 0)
+            await sellTx.wait()
+
+            const buyTx = await futuresExchange
+                .connect(trader1)
+                .buyAsset('2', 0)
+            await sellTx.wait()
+
+            
+
+            // check futureCumulativeSum
+            const futureCumulativeSum =
+                await futuresExchange.futureCumulativeSum(trader1.address)
+
+            const futuresPrice2 = await futuresExchange.futureValueAt(
+                maturityTime
+            )
+            const pricePaid = futuresPrice2 * BigInt(2);
+            console.log('futurePrie2', futuresPrice2)
+            console.log('pricePaid', pricePaid)
+
+            const tradersSecurityAmount = await futuresExchange.tradersSecurityAmount(trader1.address)
+            console.log('traders security amount', tradersSecurityAmount)
+
+            const returnedToTrader = tradersSecurityAmount + (futureCumulativeSum - pricePaid)
+
+            const latestSettlementDate = await futuresExchange.getLastSettlementDate()
+            console.log(latestSettlementDate)
+            
+            await futuresExchange.settleAllContracts();
+
+            const traderUSDCBalanceAfter =
+                await futuresExchange.traderUSDCBalance(trader1.address)
+
+            console.log("returnedToTrader", returnedToTrader)
+            console.log('traderusdcBalance', traderUSDCBalanceAfter)
+            
+            expect(traderUSDCBalanceAfter).to.equal(returnedToTrader + BigInt("10000000000000000000"))
         })
     })
 })
