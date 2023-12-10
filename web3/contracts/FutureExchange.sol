@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 pragma solidity ^0.8.20;
 
-contract FutureExchange is Ownable {
+contract FutureExchange {
 
     event TraderAccountCreation(
         address indexed trader,
@@ -72,7 +72,6 @@ contract FutureExchange is Ownable {
 
     AggregatorV3Interface internal priceFeed;
     IERC20 internal USDCtoken;
-    address public automationAddress;
 
     uint256 currentPrice;
     bool halted;
@@ -113,7 +112,7 @@ contract FutureExchange is Ownable {
     // execution time => futures value
     mapping (uint256 => uint256) public futureValueAt;
 
-    constructor(address _priceFeed, address _USDCtoken) Ownable(msg.sender) {
+    constructor(address _priceFeed, address _USDCtoken) {
         priceFeed = AggregatorV3Interface(_priceFeed);
         USDCtoken = IERC20(_USDCtoken);
         lastSettlementDate = block.timestamp;
@@ -204,7 +203,6 @@ contract FutureExchange is Ownable {
 
     function settleAllContracts() public {
 
-        // require(msg.sender == automationAddress, "settlement called by external authority");
         // will be invoked by first chainlink automation
 
         // 9 days have passed for the traders to buy and sell.
@@ -282,10 +280,6 @@ contract FutureExchange is Ownable {
         uint256 maturityTime = getExecutionTimeBySlot(0);
         futureValueAt[maturityTime] = currentPrice;
     } 
-
-    function setAutomationAddress(address _automationAddress) external onlyOwner{
-        automationAddress = _automationAddress;
-    }
 
     // execute this function each time any new selling or buying takes place
     function updateFuturesPrice(uint8 _durationSlot) internal {

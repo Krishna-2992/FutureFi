@@ -1,6 +1,6 @@
-export const usdcContractAddress = '0xC7F9075c00a517d5b07692970D32074ef7527A85'
+export const usdcContractAddress = '0xBe9C09c59Bf1f8909FBCb9707c45685cBA46b795'
 export const futureContractAddress =
-    '0x7401aF88bcd0Bdd4064C7d4965EBACeC8E2C981B'
+    '0xb35810fbE1A2D6695416541b9e52C777B011B716'
 
 export const usdcContractAbi = [
     {
@@ -349,28 +349,6 @@ export const futureContractAbi = [
         type: 'constructor',
     },
     {
-        inputs: [
-            {
-                internalType: 'address',
-                name: 'owner',
-                type: 'address',
-            },
-        ],
-        name: 'OwnableInvalidOwner',
-        type: 'error',
-    },
-    {
-        inputs: [
-            {
-                internalType: 'address',
-                name: 'account',
-                type: 'address',
-            },
-        ],
-        name: 'OwnableUnauthorizedAccount',
-        type: 'error',
-    },
-    {
         anonymous: false,
         inputs: [
             {
@@ -456,25 +434,6 @@ export const futureContractAbi = [
             },
         ],
         name: 'NewSlotStarted',
-        type: 'event',
-    },
-    {
-        anonymous: false,
-        inputs: [
-            {
-                indexed: true,
-                internalType: 'address',
-                name: 'previousOwner',
-                type: 'address',
-            },
-            {
-                indexed: true,
-                internalType: 'address',
-                name: 'newOwner',
-                type: 'address',
-            },
-        ],
-        name: 'OwnershipTransferred',
         type: 'event',
     },
     {
@@ -627,19 +586,6 @@ export const futureContractAbi = [
         ],
         name: 'UsdcDeposited',
         type: 'event',
-    },
-    {
-        inputs: [],
-        name: 'automationAddress',
-        outputs: [
-            {
-                internalType: 'address',
-                name: '',
-                type: 'address',
-            },
-        ],
-        stateMutability: 'view',
-        type: 'function',
     },
     {
         inputs: [
@@ -856,26 +802,6 @@ export const futureContractAbi = [
         type: 'function',
     },
     {
-        inputs: [],
-        name: 'owner',
-        outputs: [
-            {
-                internalType: 'address',
-                name: '',
-                type: 'address',
-            },
-        ],
-        stateMutability: 'view',
-        type: 'function',
-    },
-    {
-        inputs: [],
-        name: 'renounceOwnership',
-        outputs: [],
-        stateMutability: 'nonpayable',
-        type: 'function',
-    },
-    {
         inputs: [
             {
                 internalType: 'uint256',
@@ -889,19 +815,6 @@ export const futureContractAbi = [
             },
         ],
         name: 'sellAsset',
-        outputs: [],
-        stateMutability: 'nonpayable',
-        type: 'function',
-    },
-    {
-        inputs: [
-            {
-                internalType: 'address',
-                name: '_automationAddress',
-                type: 'address',
-            },
-        ],
-        name: 'setAutomationAddress',
         outputs: [],
         stateMutability: 'nonpayable',
         type: 'function',
@@ -1051,19 +964,6 @@ export const futureContractAbi = [
             },
         ],
         stateMutability: 'view',
-        type: 'function',
-    },
-    {
-        inputs: [
-            {
-                internalType: 'address',
-                name: 'newOwner',
-                type: 'address',
-            },
-        ],
-        name: 'transferOwnership',
-        outputs: [],
-        stateMutability: 'nonpayable',
         type: 'function',
     },
     {

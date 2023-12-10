@@ -79,6 +79,7 @@ function App() {
             }
         } catch (error) {
             console.log(error)
+            alert('Some error occured!!')
         }
     }
 
@@ -100,13 +101,14 @@ function App() {
         if (state.usdcContract) {
             checkCorrectNetwork()
             try {
-                const mintAmount = ethers.utils.parseEther('1000')
+                const mintAmount = ethers.utils.parseEther('5000')
                 const tx = await state.usdcContract.mint(mintAmount)
                 await tx.wait()
                 console.log('minted tokens successfully')
                 getBalance()
             } catch (error) {
                 console.log(error)
+                alert('Some error occured!!')
             }
         }
     }
@@ -121,6 +123,7 @@ function App() {
                 setUserBalance(formatUserBalance)
             } catch (error) {
                 console.log(error)
+                alert('Some error occured!!')
             }
         }
     }
@@ -161,6 +164,7 @@ function App() {
                 // setUserBalance(formatUserBalance)
             } catch (error) {
                 console.log(error)
+                alert('Some error occured!!')
             }
         }
     }
@@ -178,6 +182,7 @@ function App() {
                 setAllowances(formatAllowances)
             } catch (error) {
                 console.log(error)
+                alert('Some error occured!!')
             }
         }
     }
@@ -199,6 +204,7 @@ function App() {
                 setTraderSecurityAmount(parseFloat(formatTraderSecurityAmount))
             } catch (error) {
                 console.log(error)
+                alert('Some error occured!!')
             }
         }
     }
@@ -223,6 +229,7 @@ function App() {
                 console.log('approved tokens successfully')
             } catch (error) {
                 console.log(error)
+                alert('Some error occured!!')
             }
         }
     }
@@ -244,6 +251,7 @@ function App() {
                 console.log('weth brought successfully')
             } catch (error) {
                 console.log(error)
+                alert('Some error occured!!')
             }
         }
     }
@@ -263,6 +271,7 @@ function App() {
                 console.log('weth sold successfully')
             } catch (error) {
                 console.log(error)
+                alert('Some error occured!!')
             }
         }
     }
@@ -275,8 +284,10 @@ function App() {
                 await tx.wait()
 
                 console.log('trader account created!!')
+                getBalance()
             } catch (error) {
                 console.log(error)
+                alert('Some error occured!!')
             }
         }
     }
@@ -290,6 +301,7 @@ function App() {
                 setIsTrader(isTrader)
             } catch (error) {
                 console.log(error)
+                alert('Some error occured!!')
             }
         }
     }
@@ -303,6 +315,7 @@ function App() {
                 console.log('usdc deposited')
             } catch (error) {
                 console.log(error)
+                alert('Some error occured!!')
             }
         }
     }
@@ -315,6 +328,7 @@ function App() {
                 console.log('usdc claimed')
             } catch (error) {
                 console.log(error)
+                alert('Some error occured!!')
             }
         }
     }
@@ -339,6 +353,7 @@ function App() {
                 setCurrentFuturePrice(futureValue / Math.pow(10, 18))
             } catch (error) {
                 console.log(error)
+                alert('Some error occured!!')
             }
         }
     }
@@ -385,6 +400,7 @@ function App() {
                 }
             } catch (error) {
                 console.log(error)
+                alert('Some error occured!!')
             }
         }
     }
@@ -456,12 +472,18 @@ function App() {
                             </div>
                             <div className='flex flex-col w-full'>
                                 {!isTrader && (
-                                    <button
-                                        className='m-20 h-20'
-                                        onClick={createTraderAccount}
-                                    >
-                                        Create Trader Account
-                                    </button>
+                                    <div className=''>
+                                        <button
+                                            className='m-20 h-20'
+                                            onClick={createTraderAccount}
+                                        >
+                                            Create Trader Account
+                                        </button>
+                                        <div>
+                                            please mint and approve tokens
+                                            before creating trader account
+                                        </div>
+                                    </div>
                                 )}
                                 {isTrader && (
                                     <div>
@@ -523,28 +545,32 @@ function App() {
                                 )}
                             </div>
                         </div>
-                        {isTrader && <div className=''>
-                            <div>
-                                <input
-                                    type='text'
-                                    id='claimUsd'
-                                    className='p-2 m-2'
-                                    placeholder='deposit amount'
-                                />
-                                <button onClick={depositUsd}>
-                                    Deposit USDC
-                                </button>
+                        {isTrader && (
+                            <div className=''>
+                                <div>
+                                    <input
+                                        type='text'
+                                        id='claimUsd'
+                                        className='p-2 m-2'
+                                        placeholder='deposit amount'
+                                    />
+                                    <button onClick={depositUsd}>
+                                        Deposit USDC
+                                    </button>
+                                </div>
+                                <div>
+                                    <input
+                                        type='text'
+                                        id='depositUsd'
+                                        className='p-2 m-2'
+                                        placeholder='claim amount'
+                                    />
+                                    <button onClick={claimUsd}>
+                                        Claim USDC
+                                    </button>
+                                </div>
                             </div>
-                            <div>
-                                <input
-                                    type='text'
-                                    id='depositUsd'
-                                    className='p-2 m-2'
-                                    placeholder='claim amount'
-                                />
-                                <button onClick={claimUsd}>Claim USDC</button>
-                            </div>
-                        </div>}
+                        )}
                     </div>
                 </div>
             )}
@@ -578,7 +604,7 @@ function App() {
                         </button>
                     </div>
                     <button onClick={mintTokens} className='text-xl m-4 w-1/2'>
-                        Mint 1000 tokens
+                        Mint 5000 tokens
                     </button>
                 </div>
             )}
