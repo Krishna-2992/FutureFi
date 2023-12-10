@@ -8,7 +8,9 @@ import {
     Tooltip,
     Legend,
 } from 'chart.js'
+import { ethers } from 'ethers'
 import { Line } from 'react-chartjs-2'
+import { useState } from 'react'
 
 ChartJS.register(
     CategoryScale,
@@ -42,27 +44,39 @@ function Graph({ futureAssetPrices }) {
             month: 'numeric',
             day: 'numeric',
         })
-        console.log('date', formattedDateTime)
-        console.log('price.price', price.price)
-        console.log('x', x)
         // x[formattedDateTime] = x[formattedDateTime] ? x[formattedDateTime].push(price.price) : [price.price]
-        if(x[formattedDateTime]){
+        if (x[formattedDateTime]) {
             x[formattedDateTime].push(price.price)
         } else {
             x[formattedDateTime] = [price.price]
         }
-        console.log('x', x)
         return x
     }, {})
     const labels = Object.keys(objData)
+    
     labels.forEach((label) => {
-        const arr = objData.label
-        console.log(arr)
+        const arr = objData[label]
+        const sum = arr.reduce((x, i) => {
+            const val = i / Math.pow(10, 36)
+            return val + x
+        }, 0)
+
+        const avg =(sum / arr.length)
+        objData[label] = avg
     })
-
-    console.log('objData', objData)
-
-    return <p></p>
+    const dataSet = {
+        labels, 
+        datasets:[
+            {
+                label: 'Dataset 1',
+                data: labels.map((label) => objData[label]),
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+              },
+        ]
+        
+    }
+    return<Line options={options} data={dataSet} />
 }
 
 export default Graph

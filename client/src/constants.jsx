@@ -1,9 +1,6 @@
-export const usdcContractAddress = '0x70dA12B4ce4d0Be2b8221Ef6C86aa579E7917e44'
-// export const usdcContractAddress = '0x0A23e9505B93C947f6Bb23b14fc95aDc3d3Ad96A'
-// export const futureContractAddress =
-//     '0x0d80ACaB42d9027059C7fAE8D7CB8761150Dabb0'
+export const usdcContractAddress = '0xC7F9075c00a517d5b07692970D32074ef7527A85'
 export const futureContractAddress =
-    '0x7DA22752a5c80da24586eD03A6bC9526665db3f8'
+    '0x7401aF88bcd0Bdd4064C7d4965EBACeC8E2C981B'
 
 export const usdcContractAbi = [
     {

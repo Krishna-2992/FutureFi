@@ -13,22 +13,12 @@ module.exports = {
             chainId: 31337,
         },
         polygon: {
-            url: 'https://rpc-mumbai.maticvigil.com/',
-            accounts: [
-                'd4a65146f356db236eb4f167416c74c7d04b8e5a592518ab15d20083e0a9ee0f',
-            ],
+            url: POLYGON_MUMBAI_URL,
+            accounts: [PRIVATE_KEY],
         },
         avalanche: {
-            url: 'https://api.avax-test.network/ext/bc/C/rpc',
-            accounts: [
-                'd4a65146f356db236eb4f167416c74c7d04b8e5a592518ab15d20083e0a9ee0f',
-            ],
-        },
-        localhost: {
-            url: 'http://127.0.0.1:8545/',
-            accounts: [
-                '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
-            ],
+            url: AVALANCHE_FUZI_URL,
+            accounts: [PRIVATE_KEY],
         },
     },
 }
