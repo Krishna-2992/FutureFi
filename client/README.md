@@ -1,14 +1,13 @@
 frontend functionalities: 
 
-    - NAVBAR 
-    - connect wallet button 
-    - 
+    - NAVBAR ✅
+    - connect wallet button ✅
 
-    - mint the tokens in name of the owner
-    - get required tokens approved by trader for our contract
-    - display how many tokens the trader have approved to the market
+    - mint the tokens in name of the owner ✅
+    - get required tokens approved by trader for our contract ✅
+    - display how many tokens the trader have approved to the market ❌
 
-    - create trader account
+    - create trader account ✅
     - balance in the traders account 
     - security money deposited by the trader yet 
 
@@ -21,4 +20,7 @@ frontend functionalities:
     
     - display the settlement date 
     - display the status of contract to be halted or not 
+
+    - button for depositing and claiming usdc
+    - display the futures asset price
 

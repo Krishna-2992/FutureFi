@@ -23,6 +23,8 @@ function App() {
     const [connected, setConnected] = useState(false)
     const [page, setPage] = useState('trade')
     const [userBalance, setUserBalance] = useState()
+    const [historicTrades, setHistoricTrades] = useState([])
+    const [traderAccountBalance, setTraderAccountBalance] = useState()
 
     const connectWallet = async () => {
         try {
@@ -89,9 +91,27 @@ function App() {
             checkCorrectNetwork()
             try {
                 const userBalance = await state.usdcContract.balanceOf(account)
-                // const formatUserBalance = ethers.utils.formatEther(userBalance)
-                // console.log(formatUserBalance)
-                // setUserBalance(formatUserBalance)
+                const formatUserBalance = ethers.utils.formatEther(userBalance)
+                console.log(formatUserBalance)
+                setUserBalance(formatUserBalance)
+            } catch (error) {
+                console.log(error)
+            }
+        }
+    }
+
+    const getTraderBalance = async () => {
+        if (state.usdcContract) {
+            checkCorrectNetwork()
+            try {
+                const traderAccountBalance = await state.futureContract.traderUSDCBalance(account)
+                const formatTraderAccountBalance = ethers.utils.formatEther(traderAccountBalance)
+                const traderSecurityAmount = await state.futureContract.tradersSecurityAmount(account)
+                const formatTraderSecurityAmount = ethers.utils.formatEther(traderSecurityAmount)
+
+                const totalTraderAmount = parseFloat(formatTraderAccountBalance) + parseFloat(formatTraderSecurityAmount)
+                console.log('trader balance', typeof formatTraderAccountBalance)
+                setTraderAccountBalance(totalTraderAmount)
             } catch (error) {
                 console.log(error)
             }
@@ -139,14 +159,15 @@ function App() {
             }
         }
     }
+    
     const sellFuture = async () => {
         if (state.usdcContract) {
             checkCorrectNetwork()
             try {
-                const buyAssetAmount =
-                    document.querySelector('#buyAssetAmount').value
+                const sellAssetAmount =
+                    document.querySelector('#sellAssetAmount').value
                 const tx = await state.futureContract.sellAsset(
-                    buyAssetAmount,
+                    sellAssetAmount,
                     0
                 )
                 await tx.wait()
@@ -176,10 +197,37 @@ function App() {
         if (state.futureContract) {
             checkCorrectNetwork()
             try {
-                const contracts = await state.futureContract.userContracts(account, 0)
-                console.log("contract", contracts)
+                const tradeCount = await state.futureContract.tradesCount(
+                    account
+                )
+                console.log('tradeCount', tradeCount.toString())
+                setHistoricTrades([])
+                for (let i = 0; i < tradeCount.toString(); i++) {
+                    const contracts = await state.futureContract.userContracts(
+                        account,
+                        i
+                    )
+                    const price = ethers.utils.formatEther(contracts[2].toString())
+                    const dateObj = new Date(contracts[3].toNumber() * 1000); // Convert timestamp to milliseconds and create a Date object
 
-                
+                    const formattedDateTime = dateObj.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'numeric',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    second: 'numeric',
+                    });
+                    const tradeObj = {
+                        process: contracts[0] == 0 ? 'Buy' : 'Sell',
+                        assetAmount: contracts[1].toString(),
+                        assetPrice: price,
+                        timestamp: formattedDateTime,
+                    }
+                    console.log('tradeObj', tradeObj)
+                    setHistoricTrades((prev) => [...prev, tradeObj])
+                    console.log('tradeArray', historicTrades)
+                }
             } catch (error) {
                 console.log(error)
             }
@@ -188,6 +236,7 @@ function App() {
 
     // automatic functions
     getBalance()
+    getTraderBalance()
 
     return (
         <div>
@@ -210,10 +259,21 @@ function App() {
                     >
                         mint
                     </div>
+                    <div
+                        className={`mx-4 text-3xl cursor-pointer ${
+                            page === 'history' && 'font-bold'
+                        }`}
+                        onClick={() => {
+                            setPage('history')
+                            getHistoricTraders()
+                        }}
+                    >
+                        history
+                    </div>
                 </div>
                 <div className='flex justify-right items-center'>
                     {userBalance && (
-                        <div className='mx-4'>balance: {userBalance} USDC</div>
+                        <div className='mx-4'>USER's balance: {userBalance} USDC</div>
                     )}
                     <button onClick={connectWallet} id='connect_button'>
                         connect wallet
@@ -228,9 +288,6 @@ function App() {
                             <button className='' onClick={createTraderAccount}>
                                 Create Trader Account
                             </button>
-                            <button onClick={getHistoricTraders}>
-                                Historic trders
-                            </button>
                             <div className='m-4'>
                                 <input
                                     type='text'
@@ -242,7 +299,27 @@ function App() {
                                     Buy Future
                                 </button>
                             </div>
-                            <button onClick={sellFuture}>Sell Future</button>
+                            <div className=''>
+                                <input
+                                    type='text'
+                                    id='sellAssetAmount'
+                                    className='p-2'
+                                    placeholder='sell future amount'
+                                />
+                                <button onClick={sellFuture} className='m-4'>
+                                    Sell Future
+                                </button>
+                            </div>
+
+                            {/* trader account balance */}
+                            <div className='flex text-xl'>
+                                <div className='m-4'>
+                                    Trader's account balance:
+                                </div>
+                                <div className='my-4 font-semibold'>
+                                    {traderAccountBalance} USDC
+                                </div>
+                            </div>
                         </div>
                         <div>Graph for the future</div>
                     </div>
@@ -260,6 +337,41 @@ function App() {
                         />
                         <button onClick={approveUSDC}>Approve tokens</button>
                     </div>
+                </div>
+            )}
+            {page === 'history' && (
+                <div className='historic-trades m-4 text-xl'>
+                    <div className='text-3xl m-8 font-bold'>
+                        Trader's previous trades: 
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th className='p-8 m-2'>Process</th>
+                                <th className='p-8 m-2'>Asset Amount</th>
+                                <th className='p-8 m-2'>Asset Price</th>
+                                <th className='p-8 m-2'>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {historicTrades.map((tradeObj, index) => (
+                                <tr key={index}>
+                                    <td className='p-8 m-2'>
+                                        {tradeObj.process}
+                                    </td>
+                                    <td className='p-8 m-2'>
+                                        {tradeObj.assetAmount}
+                                    </td>
+                                    <td className='p-8 m-2'>
+                                        {tradeObj.assetPrice}
+                                    </td>
+                                    <td className='p-8 m-2'>
+                                        {tradeObj.timestamp}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             )}
         </div>

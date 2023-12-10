@@ -1,6 +1,9 @@
-export const usdcContractAddress = '0x8D2005f642A7767d5b0745731DDA3dD85EB64809'
+export const usdcContractAddress = '0xbD6D5D2f69d82c3603502F338dDb26476a098b8E'
+// export const usdcContractAddress = '0x0A23e9505B93C947f6Bb23b14fc95aDc3d3Ad96A'
+// export const futureContractAddress =
+//     '0x0d80ACaB42d9027059C7fAE8D7CB8761150Dabb0'
 export const futureContractAddress =
-    '0x86728c56d3C1C91E320856584e87C51Db1dED8A0'
+    '0x1808118B9b4A896Df5512Cc1AA34c2e90f050e11'
 
 export const usdcContractAbi = [
     {
@@ -718,6 +721,35 @@ export const futureContractAbi = [
                 name: '',
                 type: 'uint256',
             },
+            {
+                internalType: 'uint256',
+                name: '',
+                type: 'uint256',
+            },
+        ],
+        name: 'futurePriceData',
+        outputs: [
+            {
+                internalType: 'uint256',
+                name: 'timestamp',
+                type: 'uint256',
+            },
+            {
+                internalType: 'uint256',
+                name: 'assetPrice',
+                type: 'uint256',
+            },
+        ],
+        stateMutability: 'view',
+        type: 'function',
+    },
+    {
+        inputs: [
+            {
+                internalType: 'uint256',
+                name: '',
+                type: 'uint256',
+            },
         ],
         name: 'futureValueAt',
         outputs: [
@@ -990,18 +1022,30 @@ export const futureContractAbi = [
         inputs: [
             {
                 internalType: 'address',
+                name: '',
+                type: 'address',
+            },
+        ],
+        name: 'tradesCount',
+        outputs: [
+            {
+                internalType: 'uint256',
+                name: '',
+                type: 'uint256',
+            },
+        ],
+        stateMutability: 'view',
+        type: 'function',
+    },
+    {
+        inputs: [
+            {
+                internalType: 'address',
                 name: 'newOwner',
                 type: 'address',
             },
         ],
         name: 'transferOwnership',
-        outputs: [],
-        stateMutability: 'nonpayable',
-        type: 'function',
-    },
-    {
-        inputs: [],
-        name: 'updateLastSettlementDate',
         outputs: [],
         stateMutability: 'nonpayable',
         type: 'function',
