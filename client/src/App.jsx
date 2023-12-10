@@ -11,6 +11,8 @@ import {
     futureContractAbi,
 } from './constants'
 import './App.css'
+import {toast} from "react-toastify"
+import Graph from './Graph'
 
 function App() {
     const [state, setState] = useState({
@@ -21,10 +23,11 @@ function App() {
     })
     const [account, setAccount] = useState()
     const [connected, setConnected] = useState(false)
-    const [page, setPage] = useState('mint')
+    const [page, setPage] = useState('trade')
     const [userBalance, setUserBalance] = useState()
     const [allowances, setAllowances] = useState()
     const [historicTrades, setHistoricTrades] = useState([])
+    
     const [futureAssetPrices, setFutureAssetPrices] = useState([])
     const [traderAccountBalance, setTraderAccountBalance] = useState()
 
@@ -334,6 +337,9 @@ function App() {
                     <button onClick={connectWallet} id='connect_button'>
                         connect wallet
                     </button>
+                    <button onClick={() => toast("HEllo")}>
+                        Toast
+                    </button>
                 </div>
             </div>
 
@@ -413,7 +419,8 @@ function App() {
                                 </div>
                             </div>
                         </div>
-                        <div>Graph for the future</div>
+                        {/* <div>Graph for the future</div> */}
+                        <Graph futureAssetPrices={futureAssetPrices}/>
                     </div>
                 </div>
             )}
