@@ -1,9 +1,9 @@
-export const usdcContractAddress = '0xbD6D5D2f69d82c3603502F338dDb26476a098b8E'
+export const usdcContractAddress = '0x70dA12B4ce4d0Be2b8221Ef6C86aa579E7917e44'
 // export const usdcContractAddress = '0x0A23e9505B93C947f6Bb23b14fc95aDc3d3Ad96A'
 // export const futureContractAddress =
 //     '0x0d80ACaB42d9027059C7fAE8D7CB8761150Dabb0'
 export const futureContractAddress =
-    '0x1808118B9b4A896Df5512Cc1AA34c2e90f050e11'
+    '0x7DA22752a5c80da24586eD03A6bC9526665db3f8'
 
 export const usdcContractAbi = [
     {
@@ -914,6 +914,25 @@ export const futureContractAbi = [
         name: 'settleAllContracts',
         outputs: [],
         stateMutability: 'nonpayable',
+        type: 'function',
+    },
+    {
+        inputs: [
+            {
+                internalType: 'uint256',
+                name: '',
+                type: 'uint256',
+            },
+        ],
+        name: 'slotTotalTrades',
+        outputs: [
+            {
+                internalType: 'uint256',
+                name: '',
+                type: 'uint256',
+            },
+        ],
+        stateMutability: 'view',
         type: 'function',
     },
     {

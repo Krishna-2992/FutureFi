@@ -8,8 +8,8 @@ async function main() {
 
   const FuturesExchange = await ethers.getContractFactory('FutureExchange') 
   const futuresExchange = await FuturesExchange.deploy(AvalanchePriceFeed, usdcToken.target)
-  console.log('usdc address is', usdcToken)
-  console.log('address is : ', futuresExchange)  
+  console.log('usdc address is', usdcToken.target)
+  console.log('address is : ', futuresExchange.target)  
 }
 
 main().catch((error) => {

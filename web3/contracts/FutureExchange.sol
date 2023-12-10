@@ -106,7 +106,7 @@ contract FutureExchange is Ownable {
         uint256 assetPrice;
     }
     // timestamp => total number of trades performed
-    mapping (uint256 => uint256) slotTotalTrades;
+    mapping (uint256 => uint256) public slotTotalTrades;
     // timestamp => array of FuturePrice structs
     mapping (uint256 => FuturePrice[]) public futurePriceData;
 
@@ -329,9 +329,8 @@ contract FutureExchange is Ownable {
 
     // function to get the current WETH price
     function getPrice() public view returns(uint256) {
-        // (, int answer, , ,) = priceFeed.latestRoundData();
-        // return uint256(answer);
-        return 150000000000;
+        (, int answer, , ,) = priceFeed.latestRoundData();
+        return uint256(answer);
     }
 
     function getLastSettlementDate() public view returns(uint256) {
