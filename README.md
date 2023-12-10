@@ -212,3 +212,18 @@ TESTING PART:
     <!-- - should erase the state data variable from: totalAssetsBought, totalAssetsSold -->
     - should update lastSettlementDate
     - should set future initial price from chainlink data feed  
+
+ROLE OF CHAINLINK CCIP:
+
+    - user should be able to buy tokens even from a different chain to our exchange
+    - Future deployed on AVALANCHE.
+    - user must be able to call a contract deployed on polygon which will make the call on our contract on avalanche using ccip to create the trader. 
+    - ISSUE: 
+        how will we share the 10 usdc alongwith the message of create trader
+
+
+
+
+
+
+

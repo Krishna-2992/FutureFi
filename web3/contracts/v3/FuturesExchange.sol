@@ -5,19 +5,11 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 pragma solidity ^0.8.20;
 
-contract FutureExchange3 {
+contract FutureExchange {
 
-    event CreateTraderAccount(
+    event TraderAccountCreation(
         address indexed trader,
         uint256 timestamp
-    );
-
-    event SellFutureWETH (
-        address indexed seller, 
-        uint256 amount, 
-        uint256 futurePrice, 
-        uint256 timestamp, 
-        uint256 maturityTime
     );
 
     event BuyFutureWETH (
@@ -28,7 +20,15 @@ contract FutureExchange3 {
         uint256 maturityTime
     );
 
-    event SettleContractInvoked (
+    event SellFutureWETH (
+        address indexed seller, 
+        uint256 amount, 
+        uint256 futurePrice, 
+        uint256 timestamp, 
+        uint256 maturityTime
+    );
+
+    event SettleContractsInvoked (
         uint256 timestamp
     );
 
@@ -62,15 +62,18 @@ contract FutureExchange3 {
         uint256 amount
     );
 
+    event UsdcDeposited(
+        address trader, 
+        uint256 amount
+    );
+
     enum Process { Buy, Sell }
-    enum Status { Created, Settled }
 
     AggregatorV3Interface internal priceFeed;
     IERC20 internal USDCtoken;
 
     uint256 currentPrice;
     bool halted;
-
     uint256 public lastSettlementDate;
     uint256 prePaymentPercentage = 5;
 
@@ -78,13 +81,21 @@ contract FutureExchange3 {
     mapping(address => uint256) public traderUSDCBalance;
     mapping(address => bool) public isTrader;
     mapping(address => uint256) public tradersSecurityAmount;
-    // in case of buy, we will subtract (current future rate * number of assets)
     mapping(address => int256) public futureCumulativeSum; // handle int256 carefully
     mapping(address => int256) public netAssetsOwned; // handle int256 carefully
 
     // execution time => specific slot assets sold
     mapping (uint256 => uint256) public totalAssetsSold;
     mapping (uint256 => uint256) public totalAssetsBought;
+
+    // all the bought and sold assets of the user
+    struct Contract {
+        Process process;
+        uint256 assetAmount;
+        uint256 assetPrice;
+        uint256 timestamp;
+    }
+    mapping (address => Contract[]) public userContracts;
 
     // execution time => futures value
     mapping (uint256 => uint256) public futureValueAt;
@@ -109,12 +120,13 @@ contract FutureExchange3 {
         isTrader[msg.sender] = true;
         traders.push(msg.sender);
 
-        emit CreateTraderAccount(msg.sender, block.timestamp);
+        emit TraderAccountCreation(msg.sender, block.timestamp);
     }
 
     function buyAsset(uint256 _amount, uint8 _durationSlot) public {
         require(isTrader[msg.sender], "Trader account not created");
         require(!halted, "System is in settlement phase!");
+        require(traderUSDCBalance[msg.sender] >= 10*10**18, "Min 10 usdc required to trade");
         require(_amount > 0, "Buying amount must be greater than zero");
 
         uint256 maturityTime = getExecutionTimeBySlot(_durationSlot);
@@ -123,11 +135,20 @@ contract FutureExchange3 {
 
         require(USDCtoken.transferFrom(msg.sender, address(this), pricePaid), "Insufficient USDC balance");
 
+        userContracts[msg.sender].push(Contract(
+            Process.Buy, 
+            _amount, 
+            currentFuturePrice, 
+            block.timestamp
+        ));
+
         tradersSecurityAmount[msg.sender] += pricePaid;
         futureCumulativeSum[msg.sender] -= int256(currentFuturePrice * _amount);
         netAssetsOwned[msg.sender] += int256(_amount);
 
         totalAssetsBought[maturityTime] += _amount;
+
+        emit BuyFutureWETH(msg.sender, _amount, currentFuturePrice, block.timestamp, maturityTime);
 
         // execute setFuturesPrice at the end
         updateFuturesPrice(_durationSlot);
@@ -137,6 +158,7 @@ contract FutureExchange3 {
         // _amount will be in terms of 0.1 weth
         require(isTrader[msg.sender], "Trader account not created");
         require(!halted, "System is in settlement phase!");
+        require(traderUSDCBalance[msg.sender] >= 10*10**18, "Min 10 usdc required to trade");
         require(_amount > 0, "Selling amount must be greater than zero");
 
         uint256 maturityTime = getExecutionTimeBySlot(_durationSlot);
@@ -146,22 +168,35 @@ contract FutureExchange3 {
         // Transfer WETH to the seller
         require(USDCtoken.transferFrom(msg.sender, address(this), pricePaid ), "Insufficient USDC balance");
 
+        userContracts[msg.sender].push(Contract(
+            Process.Sell, 
+            _amount, 
+            currentFuturePrice, 
+            block.timestamp
+        ));
+
         tradersSecurityAmount[msg.sender] += pricePaid;
         futureCumulativeSum[msg.sender] += int256(currentFuturePrice * _amount);
         netAssetsOwned[msg.sender] -= int256(_amount);
 
         totalAssetsSold[maturityTime] += _amount;
 
+        emit SellFutureWETH(msg.sender, _amount, currentFuturePrice, block.timestamp, maturityTime);
+
         // Execute setFuturesPrice at the end
         updateFuturesPrice(_durationSlot);
     }
-
 
     function settleAllContracts() public {
         // will be invoked by first chainlink automation
 
         // 9 days have passed for the traders to buy and sell.
+
+        emit SettleContractsInvoked(block.timestamp);
+
         halted = true;
+        emit Halted(block.timestamp, true);
+
         uint256 maturityTime = getExecutionTimeBySlot(0);
         uint256 traderCount = traders.length;
         for(uint i=0; i<traderCount; i++) {
@@ -208,6 +243,8 @@ contract FutureExchange3 {
             tradersSecurityAmount[trader] = 0;
             futureCumulativeSum[trader] = 0;
             netAssetsOwned[trader] = 0;
+
+            // emit TraderContractsSettled(trader, maturityTime, )
         }
     }
     
@@ -215,9 +252,8 @@ contract FutureExchange3 {
     function startNewSlot() public {
         // will be called by second chainlink automation
         halted = false;
+        emit Halted(block.timestamp, true);
         currentPrice = getPrice();
-        // totalAssetsBought = 0;
-        // totalAssetsSold = 0;
 
         // update updateLastSettlementDate
         updateLastSettlementDate();
@@ -235,9 +271,11 @@ contract FutureExchange3 {
         uint256 maturityTime = getExecutionTimeBySlot(_durationSlot);
         // if more assets are bought => moore demand => price must rise
         int256 netDemand = int256(totalAssetsBought[maturityTime]) - int256(totalAssetsSold[maturityTime]);
+
         // New futures price = Current futures price + (Net demand * Adjustment factor)
         // adjustment factor for weth be 0.1
         // 1500*10**18 - 0.1*10**18 * netDemand 
+        // every 1 token = 10**18 
         if(netDemand < 0) {
             futureValueAt[maturityTime] = currentPrice - uint256(netDemand * (-1)) * 10**17;
         } else {
@@ -254,13 +292,18 @@ contract FutureExchange3 {
         require(traderUSDCBalance[msg.sender] > _amount, "INSUFFICIENT USDC IN TRADER ACCOUNT");
         traderUSDCBalance[msg.sender] -= _amount;
         USDCtoken.transfer(msg.sender, _amount);
-    } 
+    }
+
+    function depositUsdc(uint256 _amount) public {
+        require(isTrader[msg.sender], "ONLY TRADERS!!");
+        require(USDCtoken.transferFrom(msg.sender, address(this), _amount ), "Insufficient USDC balance");
+        traderUSDCBalance[msg.sender] += _amount;        
+    }
 
     // function to get the current WETH price
     function getPrice() public view returns(uint256) {
-        // (, int answer, , ,) = priceFeed.latestRoundData();
-        // return uint256(answer);
-        return 150000000000;
+        (, int answer, , ,) = priceFeed.latestRoundData();
+        return uint256(answer);
     }
 
     function getLastSettlementDate() public view returns(uint256) {
