@@ -1,168 +1,65 @@
-# Decentralized Future's Market
+# FutureFi
+## A Decentralized Futures Market
 
+FutureFi is a decentralized futures market where traders can buy and sell assets at their projected future value. The future value of an asset is not static and can change based on the current demand for the asset. The demand among traders to buy or sell an asset today can cause its price to fluctuate in the future.
 
-Possibilities: 
+In this exchange, users can deposit self-minted USDC tokens to become traders. They can then buy or sell an asset at the current future price by depositing margin money (5% of the asset's futures price). All contracts will be settled and executed at the final price at the end of the settlement period.
 
-1) Future's market betting between two individuals: 
-    Margin in the prices should be collected in prior. Eg: if the Ether price is $3000, and decided to be exchanged at $3500 after 2months, 500 shold be taken from both the individuals.
-    At the end, the amounts should be settled.
+## How it Works
 
+The process involves the following steps:
 
-2) Future's market AMM: 
-    LP will provide liquidity for the pool and the traders can trade over the liquidity pool such that they can predict the value of an underlying asset at a future date and they will be provided the particular token. At the advent of the decided date, the future's contract should be settled out.
+1. Read the current price of the commodity from the [Chainlink data feed](https://docs.chain.link/docs/using-chainlink-reference-contracts).
+2. Require every trader to open an account and keep a fixed amount of money in it.
+3. Utilize an innovative algorithm to determine the future's price based on current demand.
+4. Enable traders to buy/sell the future at the current future price.
+5. Store trade details in storage variables.
+6. Emit appropriate events for each process to maintain a historical record.
+7. After 9 days, halt the trading process for settlement.
+8. During settlement, everyone's net assets are adjusted to zero. This means that anyone who currently owns an asset will automatically sell it at the current rate, and vice versa.
+9. All assets that are settled automatically will be bought/sold at the future's price at that instant.
+10. After the settlement phase, the market will resume on the 10th day for traders to start trading again.
+11. Traders can claim or deposit the USDC they have in the market at any time (except their margin money). However, to trade, they must have at least 10 USDC in their trading account.
 
-    => The overall profit made by the pool will be equally distributed to the liquidity providers
+Two Chainlink automations were created:
 
+- After 9 days: This halts the trading process and begins the settlement process.
+- After 10 days: This resumes the trading process, resets some storage variables, and performs `updateLatestSettlementTime` and `setFuturesInitialPrice`.
 
-3) Implementing cross chain: people from other chains can also bet on our smart contract such that if they wish to pay 
-with tokens on different chain, we will give them the option for that as well. 
-    If get some profit, the profit can be claimed on any other chain as well!!
+## Innovative Algorithm
 
-    => Liquidity pool will be created for each future's contract. eg: for SOLANA, MATIC, etc.
+The algorithm works as follows:
 
-    => MARGIN MANAGEMENT: Implement margin requirements to make counterparty risk.
-    => Settlement management: when the contract matures.
-    => CHAINLINK ORACLE integration to get correct market price.
-    => <----Staking and reward----->
+- Get the price of the asset from Chainlink.
+- New futures price = Current futures price + (Net demand * Adjustment factor).
+- The adjustment factor for WETH is 0.1.
 
+## Event Emission
 
-today's silver price: 75k
+Events are emitted for the following actions:
 
-    scenario 1: buy future for 70k after 1 month:
-        case 1: price fell(70k) : current price and fixed price be same 😑
-        case 2: price rise(80k) : someone will be bonded to sell us at low price 😎
- 
-    scenario 2: buy future for 80k after 1 month: 
-        case 1: price fell(50k) : even after price drop, we have to buy at contract(high) price 😭
-        case 2: price rise(80k) : current price and fixed price be same 😑
+- Creation of a new trader: `newTrader(trader, timestamp)`.
+- Selling assets: `sellAsset(trader, amount, futurePrice, timestamp, maturityTime)`.
+- Buying assets: `buyAsset(trader, amount, futurePrice, timestamp, maturityTime)`.
+- Invocation of contract settlement: `settleContracts(timestamp)`.
+- Halting of the system: `haltSystem(timestamp, bool)`.
+- Updating of trader's USDC after all contracts are settled: `updateTraderUSDC(trader, maturityTime, usdcReturned)`.
+- Starting of a new slot: `startNewSlot(timestamp)`.
+- Setting of the initial future price: `setFutureInitialPrice(timestamp, futurePrice)`.
+- Updating of the last execution date: `updateLastExecutionDate(oldExecutionDate, newExecutionDate)`.
+- Claiming of USDC: `claimUsdc(trader, _amount)`.
 
-    scenario 3: sell future for 70k after 1 month: 
-        case 1: price fell(70k) : current price and fixed price be same 😑
-        case 2: price rise(80k) : contract(selling) price is less than current price 😭
-
-    scenario 4: sell future for 80k after 1 month: 
-        case 1: price fell(70k) : selling price is more than current price 😎
-        case 2: price rise(80k) : current price and fixed price be same 😑
-
-Providing security: 
-
-    case 1: If you are selling the WETH on some future date: 
-        Get your WETH stored with us, which can be taken out at any time by settling up the price which may follow
-    case 2: If you are purchasing the WETH on some future date:
-        Get some required USDC stored with us so that it may act as security for your contract to buy.
-
-Settlement duration: 
-
-    All the contracts would be settled in every 10 days: 
-    If a person will give duration as 0, he will be claiming to buy/sell at the immidiate next settlement date, If they are claiming it to be 1, he will be claiming to buy/sell after the next upcoming settlement, and so on...
-
-    Sellers: sellers can sell their WETH by claiming at any time...(from 0 to 2)
-
-    Buyers: buyers can buy the WETH for current slot. further slots can only be claimed if some seller have already claimed to sell afterwards
-
-Settlement process: 
-
-    For each WETH unit to be sold, we need to create a new mapping pointing to an array of addresses for each price possible which are going to provide the available addresses which will to sell the weth at that specific price
-        => like mapping (uint256 => address[]) sellerAddresses;
-
-    when any sell or buy request will be made, we will first need to check weather any existing opposite request is already present at the same price. If yes, directly call the function to settle the contracts and change the status of both these contracts to be settled. Make an array for settled contracts as well which will get executed at the end when we will execute all the settled contract.
-
-Execution of Settlement: 
-
-    For each successful settlement, the buyer have to drop the remaining amount of USDC tokens to get the WETH in their account. Then the status of both the contracts, i.e. seller and the buyer will become `Executed`.
-
-Chainlink Products: 
-
-    POLYGON MUMBAI:
-    Chainlink data feeds: to get the current price of WETH // ETH/USD: 0x0715A7794a1dc8e42615F059dD6e406A6594651A
-    Chainlink automation: to automatically call the settlement function.
-
-Futures Terminology: 
-    
-    -> Contract Cycle: at a time, three months contracts would be open
-    -> Expiration day: last day of contract, all contracts would settled on that day
-    -> Tick Size: value at which WETH could be sold in USDC. 1 USDC for us
-    -> Contract Size: steps at which WETH could be sold: 1 WETH for us currently
-    -> Margin Account: Initial amount deposited by the trader to use the exchange. token money. 10% to 50%
-    -> Mark to market: 
-    -> Circuit & hault: if buyer or seller became triple of anyone, we will hault the system => check each hour 
-
-Further Updations: 
-    
-    1) Implement the feature of tick for usdc price
-    2) Implement the feature of contract size(slab) for WETH
-    3) Every user will be able to make multiple trades, not just one
-    4) Make it applicable for upto 3 slots, i.e. _duration to be 0, 1, 2
-    5) Make it possible for traders to withdraw their trade by paying a proper amount of compensation.
-    6) Make it possible for the traders to call the individual execute rather than us calling it for every contract.
-    7) Implement that seller could sell the weth without even having to collateralize in weth(they can collateralize in usdc)
-    8) Implement the feature of haulting the system when required
-
-
-Features/Limitations: 
-
-    1) Only one contract per price by one user
-
---------------------------------------------------------------------------------
----------------------------------  VERSION 3  ----------------------------------
---------------------------------------------------------------------------------
-
-Here we are supposed to make an exchange which have the capability to get the USDC deposit by the user (5% of the current price) and then update the future price for a fixed date on the basis of an algorithm. Then at the end of the settlement period, every contract will be settled and then executed at the last point. 
-After which, all the entries will again be erased and whole set of new processes start.
-
-Steps: 
-
-    1) Read the current price of the commodity from the chainlink data feed. 
-    1.5)Make every trader to open his account and keep some fixed amount of money in it
-    2) Use the below specified algorithm for getting the future's price.
-    3) Make the traders buy/sell the future on the rates specified
-    4) Get all the details of all the contracts stored properly in storage variables
-    5) Emit proper events for each process so as to have a historic record
-    6) After 9 days, stop the trading process and now the settlement would take place
-    7) In settlement, everyone's record will be brought down to zero i.e. the one who currently owns an asset would automatically sell the same at current rate and vice versa.
-    8) At start of settlement time, the exact price from the chainlink would be read and everyone would be paid according to it.
-
-    We'll have to create two chainlink automations: 
-        i) after 9 days: that will hault the trading process and will start the process of settlement. 
-        ii) after 10 days: that will resume the trading process by erasing all the previous data in state variable and calling the updateLatestSettlementTime and setFuturesInitialPrice.
-
-
-
-Innovative Algo(By legend Krishna😎):
-
-    - Get the price of the asset from chainlink
-    - for the first buyer or seller, increase or decrease it by 0.1%
-    - for the upcoming ones, change it like: (original price) * buyers / sellers; ___discuss this
-    - change this original price value each hour and get it from the chainlink oracle
-    - hence use the chainlink automation as well for changing the price each hour
-    - use the formula: 
-        futureValueAt[maturityTime] = currentPrice - netDemand * 0.1 * 10**18;
-
-EVENTS EMITTING: 
-    
-    - Creation of a new trader ✅ [trader, timestamp]
-    - Selling assets ✅ [trader, amount, futurePrice, timestamp, maturityTime]
-    - Buying assets ✅ [trader, amount, futurePrice, timestamp, maturityTime]
-    - Settle contracts invoked ✅ [timestamp]
-    - halted ✅ [timestamp, bool] 
-    - Trader's usdc updated(all contract settled) ✅ [trader, maturityTime, usdcReturned]
-    - New slot started ✅ [timestamp]
-    - FutureInitialPrice ✅ [timestamp, futurePrice]
-    - update last execution date ✅ [oldExecutionDate, newExecutionDate]
-    - claimUsdc ✅ [trader, _amount]
-
-
-TESTING PART: 
+### TESTING PART:
 
     NOTE: FOR TESTING PURPOSE, PRICE FEED VALUE SET TO 1500*10**8, mocks not deployed separately!!
-    
+
     i) Deployment: ✅
     - should deploy properly with priceFeed address and usdcTokenAddress
 
-    ii) Creating Trader: 
+    ii) Creating Trader:
     - should create trader properly and update variables
 
-    iii) Buying Assets(SINGLE & MULTIPLE ASSETS): 
+    iii) Buying Assets(SINGLE & MULTIPLE ASSETS):
     - check for trader existence
     - check that current future price raises after purchase
     - check if the security amount updated properly
@@ -178,14 +75,14 @@ TESTING PART:
     - check if netAssetsOwned updates properly
     - check if totalAssetsBought updates properly
 
-    v) Buying and Selling Assets(SINGLE TRADER) 
+    v) Buying and Selling Assets(SINGLE TRADER)
     - check if security amount updates properly
     - calculate the price and cross verify
     - check if futureCumulativeSum updates properly
     - check if netAssetsOwned updates properly
     - check if totalAssetsBought updates properly
 
-    vi) Settling Futures Contracts(SINGLE TRADER) 
+    vi) Settling Futures Contracts(SINGLE TRADER)
     - after settlement, the traderUSDCBalance updates
     - security amount becomes 0
     - futureCumulativeSum becomes 0
@@ -194,7 +91,7 @@ TESTING PART:
     - system halts
     - buying and selling stops
 
-    vii) Settling Futures Contracts(MULTIPLE TRADERS) 
+    vii) Settling Futures Contracts(MULTIPLE TRADERS)
     - after settlement, the traderUSDCBalance updates
     - security amount becomes 0
     - futureCumulativeSum becomes 0
@@ -211,19 +108,23 @@ TESTING PART:
     - currentPrice updates
     <!-- - should erase the state data variable from: totalAssetsBought, totalAssetsSold -->
     - should update lastSettlementDate
-    - should set future initial price from chainlink data feed  
+    - should set future initial price from chainlink data feed
 
-ROLE OF CHAINLINK CCIP:
+### Deployment:
 
-    - user should be able to buy tokens even from a different chain to our exchange
-    - Future deployed on AVALANCHE.
-    - user must be able to call a contract deployed on polygon which will make the call on our contract on avalanche using ccip to create the trader. 
-    - ISSUE: 
-        how will we share the 10 usdc alongwith the message of create trader
+    The contracts are deployed on Avalanche Fuji Testnetwork
+    USDC token address: 0xBe9C09c59Bf1f8909FBCb9707c45685cBA46b795
+    Futures contract address: 0xb35810fbE1A2D6695416541b9e52C777B011B716
 
+### Chainlink Usage: 
 
+    1) Data Feed: Contract uses chainlink's data feed so as to access the real value of WETH so as to calculate the futures value of the asset
+    2) Automation: Contract uses chainlink's time automation to call the settleContracts and startNewSlot function with an interval of 10 days.
 
+### Future Modification Possibilities: 
+    1) Can be made compatible to handle multiple slots rather than just immidiate one.
+    2) Better Algorithm can be used to calculate the futures price which will be in correspondance with the actual price of the asset in outer market as well
+    3) Integration of cross chain protocols like ccip, which will make it accessible through multiple chains.
 
-
-
-
+### Providing security: 
+    For providing security, our contract makes the user deposit the margin amount for the token trade(5%). If the seller makes a profit, then the margin money will be returned alongwith the profit made but in case of a loss, the loss will be covered up using the same security money only. This ensures that the net total of the assets in the marketplace should sum up to zero.

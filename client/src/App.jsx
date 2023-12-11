@@ -404,6 +404,7 @@ function App() {
             }
         }
     }
+    
 
     return (
         <div>
@@ -613,6 +614,7 @@ function App() {
                     <div className='text-3xl m-8 font-bold'>
                         Trader's previous trades:
                     </div>
+                    {console.log("💥💥💥", historicTrades)}
                     {historicTrades.length && (
                         <table>
                             <thead>
