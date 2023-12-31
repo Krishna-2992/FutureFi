@@ -125,6 +125,8 @@ Events are emitted for the following actions:
     1) Can be made compatible to handle multiple slots rather than just immidiate one.
     2) Better Algorithm can be used to calculate the futures price which will be in correspondance with the actual price of the asset in outer market as well
     3) Integration of cross chain protocols like ccip, which will make it accessible through multiple chains.
+    4) Make the system secure such that only the chainlink automation function would be able to call it.
+    5) Improve the frontend of the system
 
 ### Providing security: 
     For providing security, our contract makes the user deposit the margin amount for the token trade(5%). If the seller makes a profit, then the margin money will be returned alongwith the profit made but in case of a loss, the loss will be covered up using the same security money only. This ensures that the net total of the assets in the marketplace should sum up to zero.
