@@ -22,7 +22,7 @@ const toastError = () => {
         theme: 'light',
     })
 }
-const toastSuccessObject = {
+const toastObject = {
     position: 'top-right',
     autoClose: 3000,
     hideProgressBar: false,
@@ -207,12 +207,16 @@ const UserContextProvider = ({ children }) => {
 
                 toast.success(
                     'trader account created successfully',
-                    toastSuccessObject
+                    toastObject
                 )
+                setIsTrader(true)
                 getBalance()
             } catch (error) {
                 console.log(error)
-                toastError()
+                toast.error(
+                    'Please mint and approve tokens first', 
+                    toastObject
+                )
             }
         }
     }
@@ -227,22 +231,22 @@ const UserContextProvider = ({ children }) => {
                 await tx.wait()
                 console.log('usdc deposited')
                 setTxCompletedCount((prev) => ++prev)
-                toast.success('usdc deposited successfully', toastSuccessObject)
+                toast.success('usdc deposited successfully', toastObject)
             } catch (error) {
                 console.log(error)
                 toastError()
             }
         }
     }
-    const claimUsd = async () => {
+    const claimUsd = async (amount) => {
         if (futureContract) {
             checkCorrectNetwork()
             try {
-                const tx = await futureContract.claimUsdc('10')
+                const tx = await futureContract.claimUsdc(ethers.utils.parseEther(amount))
                 await tx.wait()
                 console.log('usdc claimed')
                 setTxCompletedCount((prev) => ++prev)
-                toast.success('usdc claimed successfully!', toastSuccessObject)
+                toast.success('usdc claimed successfully!', toastObject)
             } catch (error) {
                 console.log(error)
                 toastError()
@@ -258,7 +262,7 @@ const UserContextProvider = ({ children }) => {
                 console.log(futureContract)
                 console.log('weth brought successfully')
                 setTxCompletedCount((prev) => ++prev)
-                toast.success('brought usdc successfully', toastSuccessObject)
+                toast.success('brought usdc successfully', toastObject)
             } catch (error) {
                 console.log(error)
                 toastError()
@@ -274,7 +278,7 @@ const UserContextProvider = ({ children }) => {
                 await tx.wait()
                 setTxCompletedCount((prev) => ++prev)
                 console.log('weth sold successfully')
-                toast.success('sold usdc successfully', toastSuccessObject)
+                toast.success('sold usdc successfully', toastObject)
             } catch (error) {
                 console.log(error)
                 toastError()
@@ -320,7 +324,7 @@ const UserContextProvider = ({ children }) => {
                 setTxCompletedCount(prev => prev + 1)
                 console.log("after", txCompletedCount)
                 console.log('approved tokens successfully')
-                toast.success('approved usdc successfully', toastSuccessObject)
+                toast.success('approved usdc successfully', toastObject)
             } catch (error) {
                 console.log(error)
                 toastError()
@@ -339,7 +343,7 @@ const UserContextProvider = ({ children }) => {
                 console.log(txCompletedCount)
                 setTxCompletedCount((prev) => ++prev)
                 console.log(txCompletedCount)
-                toast.success('minted usdc successfully', toastSuccessObject)
+                toast.success('minted usdc successfully', toastObject)
             } catch (error) {
                 console.log(error)
                 toastError()
