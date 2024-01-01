@@ -1,6 +1,6 @@
-export const usdcContractAddress = '0xBe9C09c59Bf1f8909FBCb9707c45685cBA46b795'
+export const usdcContractAddress = '0x4178750496BB0f10d05BFCd32Be95D4b132BF19b'
 export const futureContractAddress =
-    '0xb35810fbE1A2D6695416541b9e52C777B011B716'
+    '0x1161bA51CDf4DDe9FCa75e9A0492A1a5B173C340'
 
 export const usdcContractAbi = [
     {

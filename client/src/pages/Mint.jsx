@@ -3,7 +3,7 @@ import { usdcContractAddress, futureContractAddress } from '../constants'
 import UserContext from '../context/userContext'
 
 const Mint = () => {
-    const { setTxCompleted, isConnected, userBalance, allowances } =
+    const { txCompletedCount, isConnected, userBalance, allowances } =
         useContext(UserContext)
     const {
         getBalance,
@@ -16,7 +16,9 @@ const Mint = () => {
     useEffect(() => {
         getBalance()
         getAllowances()
-    }, [isConnected, setTxCompleted])
+        console.log('inside mint useEffect')
+        console.log('outside txcount value', )
+    }, [isConnected, txCompletedCount])
 
     return (
         <div>

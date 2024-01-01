@@ -30,17 +30,11 @@ body {
     margin: 0;
     min-width: 320px;
     min-height: 100vh;
-    background: #5a3f37; /* fallback for old browsers */
-    background: -webkit-linear-gradient(
-        to right,
-        #2c7744,
-        #5a3f37
-    ); /* Chrome 10-25, Safari 5.1-6 */
-    background: linear-gradient(
-        to right,
-        #2c7744,
-        #5a3f37
-    ); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+    background-image: radial-gradient(
+        circle farthest-corner at 10% 20%,
+        rgba(100, 43, 115, 1) 0%,
+        rgba(4, 0, 4, 1) 90%
+    );
 }
 
 button {

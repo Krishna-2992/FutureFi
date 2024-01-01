@@ -19,6 +19,7 @@ const Home = () => {
         getBalance,
         getTraderBalance,
         getCurrentFuture,
+        createTraderAccount,
         depositUsd,
         claimUsd,
         buyFuture,
@@ -33,7 +34,7 @@ const Home = () => {
         getTraderBalance()
         getFuturesData()
         getCurrentFuture()
-    }, [isConnected, txCompletedCount])
+    }, [isConnected, txCompletedCount, isTrader])
 
     return (
         <div>
@@ -59,7 +60,7 @@ const Home = () => {
                                 <div className=''>
                                     <button
                                         className='m-20 h-20'
-                                        // onClick={createTraderAccount}
+                                        onClick={createTraderAccount}
                                     >
                                         Create Trader Account
                                     </button>

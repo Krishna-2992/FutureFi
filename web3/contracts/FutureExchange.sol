@@ -267,7 +267,7 @@ contract FutureExchange {
         // will be called by second chainlink automation
         halted = false;
         emit Halted(block.timestamp, true);
-        currentPrice = getPrice();
+        currentPrice = getPrice() * 10**10;
 
         // update updateLastSettlementDate
         updateLastSettlementDate();
