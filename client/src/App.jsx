@@ -454,7 +454,6 @@ function App() {
                 </div>
             )}
             {connected === true && page === 'trade' && (
-                <div>
                     <div className=''>
                         <div className='text-2xl'>
                             Future USDC Value on{' '}
@@ -488,7 +487,6 @@ function App() {
                                 )}
                                 {isTrader && (
                                     <div>
-                                        {/* trader account balance */}
                                         <div className='flex text-xl'>
                                             <div className='m-4'>
                                                 User's account balance:
@@ -573,7 +571,6 @@ function App() {
                             </div>
                         )}
                     </div>
-                </div>
             )}
             {connected === true && page === 'mint' && (
                 <div>
