@@ -30,6 +30,17 @@ body {
     margin: 0;
     min-width: 320px;
     min-height: 100vh;
+    background: #5a3f37; /* fallback for old browsers */
+    background: -webkit-linear-gradient(
+        to right,
+        #2c7744,
+        #5a3f37
+    ); /* Chrome 10-25, Safari 5.1-6 */
+    background: linear-gradient(
+        to right,
+        #2c7744,
+        #5a3f37
+    ); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
 }
 
 button {
@@ -62,4 +73,20 @@ button:focus-visible {
     button {
         background-color: #f9f9f9;
     }
+}
+
+.blue-glassmorphism {
+    background: rgb(39, 51, 89, 0.4);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+}
+.white-glassmorphism {
+    background: rgba(255, 255, 255, 0.5);
+    /* border-radius: 16px; */
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
