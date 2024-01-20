@@ -66,6 +66,10 @@ const UserContextProvider = ({ children }) => {
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: '0xa869' }], // chainId must be in hexadecimal
         })
+        window.ethereum.on('chainChanged', (newChainId) => {
+            console.log("Network changed to chain ID:", newChainId);
+            window.location.reload();
+          });
     }
     const connectToMetamask = async () => {
         console.log('conecting to metamask')
@@ -73,10 +77,12 @@ const UserContextProvider = ({ children }) => {
             const provider = new ethers.providers.Web3Provider(window.ethereum)
             await provider.send('eth_requestAccounts', [])
 
+            await checkCorrectNetwork()
+
+
             const signer = provider.getSigner()
             const address = await signer.getAddress()
 
-            await checkCorrectNetwork()
 
             const usdcContract = new ethers.Contract(
                 usdcContractAddress,
@@ -129,7 +135,6 @@ const UserContextProvider = ({ children }) => {
                 console.log('isTrader', isTrader)
                 setIsTrader(isTrader)
             } catch (error) {
-                console.log(error)
                 console.log(error)
                 toastError()
             }
